@@ -1,0 +1,6 @@
+@E_Channeling_HostAddress = http://localhost:5211
+
+GET {{E_Channeling_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
