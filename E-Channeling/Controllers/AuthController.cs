@@ -1,6 +1,7 @@
 ﻿using E_Channeling.Data;
-using E_Channeling.Models;
 using E_Channeling.DTOs;
+using E_Channeling.Models;
+using E_Channeling.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,12 +15,14 @@ namespace E_Channeling.Controllers
         {
             private readonly ApplicationDbContext _context;
             private readonly PasswordHasher<User> _passwordHasher;
+            private readonly JwtService _jwtService;
 
-            public AuthController(ApplicationDbContext context)
+        public AuthController(ApplicationDbContext context, JwtService jwtService)
             {
                 _context = context;
                 _passwordHasher = new PasswordHasher<User>();
-            }
+                _jwtService = jwtService;
+        }
 
             [HttpPost("register")]
             public async Task<IActionResult> Register(RegisterRequest request)
@@ -63,6 +66,52 @@ namespace E_Channeling.Controllers
                     message = "Registration successful."
                 });
             }
-        
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginRequest request)
+        {
+            // 1. Find user by email
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+            if (user == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "Invalid email or password."
+                });
+            }
+
+            // 2. Verify password
+            var result = _passwordHasher.VerifyHashedPassword(
+                user,
+                user.PasswordHash,
+                request.Password
+            );
+
+            if (result == PasswordVerificationResult.Failed)
+            {
+                return Unauthorized(new
+                {
+                    message = "Invalid email or password."
+                });
+            }
+
+            // 3. Generate JWT
+            var token = _jwtService.GenerateToken(user);
+
+            // 4. Return response
+            var response = new AuthResponse
+            {
+                Token = token,
+                UserId = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Role = user.Role
+            };
+
+            return Ok(response);
         }
+
+    }
 }
