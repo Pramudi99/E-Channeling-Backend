@@ -2,6 +2,7 @@
 using E_Channeling.DTOs;
 using E_Channeling.Models;
 using E_Channeling.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -111,6 +112,33 @@ namespace E_Channeling.Controllers
             };
 
             return Ok(response);
+        }
+
+        [HttpGet("profile")]
+        [Authorize]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var user = await _context.Users.FindAsync(int.Parse(userId));
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(new
+            {
+                user.Id,
+                user.FullName,
+                user.Email,
+                user.Role
+            });
         }
 
     }
