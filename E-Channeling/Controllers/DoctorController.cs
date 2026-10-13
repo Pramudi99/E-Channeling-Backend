@@ -129,6 +129,39 @@ namespace E_Channeling.Controllers
             });
         }
 
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateDoctor(
+            int id,
+            UpdateDoctorRequest request)
+                {
+                    var doctor = await _context.Doctors
+                        .Include(d => d.User)
+                        .FirstOrDefaultAsync(d => d.Id == id);
+
+                    if (doctor == null)
+                    {
+                        return NotFound(new
+                        {
+                            message = "Doctor not found."
+                        });
+                    }
+
+                    doctor.User.FullName = request.FullName;
+                    doctor.Specialization = request.Specialization;
+                    doctor.Qualification = request.Qualification;
+                    doctor.Experience = request.Experience;
+                    doctor.ConsultationFee = request.ConsultationFee;
+                    doctor.Description = request.Description;
+
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new
+                    {
+                        message = "Doctor updated successfully."
+                    });
+                }
+
 
     }
 }
