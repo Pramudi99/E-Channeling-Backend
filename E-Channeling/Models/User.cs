@@ -13,6 +13,8 @@
         public string Role { get; set; } = "Patient";
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public Doctor? Doctor { get; set; }
     }
 }
 
